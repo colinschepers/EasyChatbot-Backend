@@ -1,0 +1,19 @@
+{
+	"name": "EasyChatbot",
+	"welcome_messages": [
+		"Hello, how are you?",
+		"Hi, how are you doing today?",
+		"Hello, can I help you?"
+	],
+	"no_answer_messages": [
+		"I don't understand, can you rephrase?",
+		"I'm not sure what you mean, but I might understand tomorrow.",
+		"I'm sorry, I don't know how to reply to that."
+	],
+	"qas": [],
+	"settings": {
+		"max_question_count": 10,
+		"max_answer_count": 10,
+		"match_threshold": 0.6
+	}
+}
