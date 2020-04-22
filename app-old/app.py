@@ -1,8 +1,9 @@
 import uuid
 import json
 import psutil
+import sqlite3
 from datetime import datetime
-from flask import Flask, request, session, send_from_directory
+from flask import Flask, request, session, send_from_directory, g
 from flask_restful import reqparse
 from config import config
 from chatbot import Chatbot

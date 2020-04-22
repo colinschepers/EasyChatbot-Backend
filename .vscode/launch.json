@@ -1,27 +1,20 @@
 {
     "version": "0.2.0",
-    "configurations": [{
-            "name": "Python: app.py",
-            "type": "python",
-            "request": "launch",
-            "cwd": "${workspaceFolder}/app",
-            "program": "app.py",
-            "console": "integratedTerminal",
-            "env": {
-                "CONFIG_NAME": "config.json",
-                "FLASK_ENV": "development"
-            }
-        },
+    "configurations": [
         {
-            "name": "Python: File",
+            "name": "Python: Flask",
             "type": "python",
             "request": "launch",
-            "cwd": "${workspaceFolder}/app",
-            "program": "${file}",
-            "console": "integratedTerminal",
+            "module": "flask",
             "env": {
-                "CONFIG_NAME": "config.json",
-            }
+                "FLASK_APP": "easychatbot",
+                "FLASK_ENV": "development",
+                "FLASK_CONFIG": "development"
+            },
+            "args": [
+                "run",
+                "--no-reload"
+            ]
         }
     ]
 }
