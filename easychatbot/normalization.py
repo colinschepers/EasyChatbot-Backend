@@ -1,13 +1,14 @@
-import re
 import os.path
+import re
+import threading
 import pickle
 import nltk
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from string import punctuation
-from logger import logger
-from config import config
-from core import LimitedSizeDict
+from flask import current_app as app
+from .core import LimitedSizeDict
+
 
 # nltk.download('punkt')
 # nltk.download('stopwords')
@@ -15,6 +16,7 @@ from core import LimitedSizeDict
 
 stopword = stopwords.words('english')
 wordnet_lemmatizer = WordNetLemmatizer()
+normalization_cache = LimitedSizeDict(size_limit=1000000)
 
 contractions = {
     "ain't": "am not",
@@ -141,17 +143,17 @@ def normalize_multiple(texts):
     new_texts = [text for text in texts if text not in normalization_cache]
 
     if len(new_texts) > 0:
-        logger.debug(f'Normalizing {len(new_texts)} texts')
+        app.logger.debug(f'Normalizing {len(new_texts)} texts')
         new_normalized_texts = [__normalize(text) for text in new_texts]
         normalization_cache.update(zip(new_texts, new_normalized_texts))
-        save_normalization_cache()
+        __save_normalization_cache()
 
     return [normalization_cache[text] for text in texts]
 
 
 def normalize_single(text):
     normalized_text = __normalize(text)
-    save_normalization_cache()
+    __save_normalization_cache()
     return normalized_text
 
 
@@ -183,8 +185,13 @@ def expand_contractions(text, contractions):
     return expanded_text
 
 
-def load_normalization_cache():
-    path = os.path.join(config['DATA_PATH'], 'normalization_cache.pkl')
+def init_normalization():
+    normalization_cache = __load_normalization_cache()
+    __normalize('warmup')
+
+
+def __load_normalization_cache():
+    path = os.path.join(app.config['DATA_PATH'], 'normalization_cache.pkl')
     if os.path.exists(path):
         with open(path, 'rb') as f:
             cache = LimitedSizeDict(size_limit=1000000)
@@ -193,10 +200,7 @@ def load_normalization_cache():
     return LimitedSizeDict(size_limit=1000000)
 
 
-def save_normalization_cache():
-    path = os.path.join(config['DATA_PATH'], 'normalization_cache.pkl')
+def __save_normalization_cache():
+    path = os.path.join(app.config['DATA_PATH'], 'normalization_cache.pkl')
     with open(path, 'wb') as f:
         pickle.dump({key: normalization_cache[key] for key in normalization_cache.keys()}, f)
-
-
-normalization_cache = load_normalization_cache()

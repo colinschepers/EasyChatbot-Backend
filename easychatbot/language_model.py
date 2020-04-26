@@ -1,18 +1,16 @@
 import os.path
 import pickle
-import normalization
-from logger import logger
-from config import config
-from core import LimitedSizeDict
 from sentence_transformers import SentenceTransformer
+from flask import current_app as app
+from .core import LimitedSizeDict
 
 
-sentence_transformer = SentenceTransformer(config['MODEL_NAME'])
+sentence_transformer = SentenceTransformer(app.config['LANGUAGE_MODEL_NAME'])
 
 
 def encode(texts):
     if not sentence_transformer:
-        logger.warning('Unable to encode because the model was not correctly loaded')
+        app.logger.warning('Unable to encode because the model was not correctly loaded')
         return []
     if len(texts) == 0:
         return []
@@ -20,7 +18,7 @@ def encode(texts):
     new_texts = list(set(text for text in texts if text not in encoding_cache))
 
     if len(new_texts) > 0:
-        logger.debug(f'Encoding {len(new_texts)} texts')
+        app.logger.debug(f'Encoding {len(new_texts)} texts')
         new_embeddings = sentence_transformer.encode(new_texts)
         encoding_cache.update(zip(new_texts, new_embeddings))
         save_encoding_cache()
@@ -29,7 +27,7 @@ def encode(texts):
 
 
 def load_encoding_cache():
-    path = os.path.join(config['DATA_PATH'], 'encoding_cache.pkl')
+    path = os.path.join(app.config['DATA_PATH'], 'encoding_cache.pkl')
     if os.path.exists(path):
         with open(path, 'rb') as f:
             cache = LimitedSizeDict(size_limit=1000000)
@@ -39,7 +37,7 @@ def load_encoding_cache():
 
 
 def save_encoding_cache():
-    path = os.path.join(config['DATA_PATH'], 'encoding_cache.pkl')
+    path = os.path.join(app.config['DATA_PATH'], 'encoding_cache.pkl')
     with open(path, 'wb') as f:
         pickle.dump({key: encoding_cache[key] for key in encoding_cache.keys()}, f)
 

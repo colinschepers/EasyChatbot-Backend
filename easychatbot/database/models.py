@@ -1,19 +1,22 @@
+import json
 from datetime import datetime
-from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
-from . import db
+from easychatbot.database import db
 
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
-    user_name = db.Column(db.String(60), index=True, unique=True)
     email = db.Column(db.String(60), index=True, unique=True)
     password_hash = db.Column(db.String(128))
+    user_name = db.Column(db.String(60), index=True, unique=True)
+    first_name = db.Column(db.String(60))
+    last_name = db.Column(db.String(60))
     is_admin = db.Column(db.Boolean, default=False)
-    created = db.Column(db.DateTime, default=datetime.now())
+    chatbot_id = db.Column(db.Integer, db.ForeignKey('chatbots.id'))
+    created = db.Column(db.DateTime, default=datetime.utcnow)
 
     @property
     def password(self):
@@ -27,15 +30,18 @@ class User(UserMixin, db.Model):
         return check_password_hash(self.password_hash, password)
 
     def __repr__(self):
-        return '<User: {}>'.format(self.user_name)
+        return '<User: {}>'.format(self.name)
 
 
 class Chatbot(db.Model):
     __tablename__ = 'chatbots'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(60), index=True, unique=True, nullable=False)
-
+    name = db.Column(db.String(60), index=True)
+    match_threshold = db.Column(db.Float(), default=0.6)
+    welcome_messages = db.Column(db.Text, default='[]')
+    no_answer_messages = db.Column(db.Text, default='[]')
+    
     def __repr__(self):
         return '<Chatbot: {}>'.format(self.name)
 
@@ -44,6 +50,9 @@ class QA(db.Model):
     __tablename__ = 'qas'
 
     id = db.Column(db.Integer, primary_key=True)
+    chatbot_id = db.Column(db.Integer, db.ForeignKey('chatbots.id'), index=True)
+    questions = db.relationship('Question')
+    answers = db.relationship('Answer')
 
     def __repr__(self):
         return '<QA: {}>'.format(self.id)
@@ -53,35 +62,34 @@ class Question(db.Model):
     __tablename__ = 'questions'
 
     id = db.Column(db.Integer, primary_key=True)
-    dialog_id = db.Column(db.Integer)
-    text = db.Column(db.String(200))
-    normalized_text = db.Column(db.String(200))
-
+    qa_id = db.Column(db.Integer, db.ForeignKey('qas.id'), index=True)
+    text = db.Column(db.String(1024))
+    
     def __repr__(self):
         return '<Question: {}>'.format(self.text)
 
 
 class Answer(db.Model):
-    __tablename__ = 'answers'
+    __tablename__ = 'answer'
 
     id = db.Column(db.Integer, primary_key=True)
-    dialog_id = db.Column(db.Integer)
-    text = db.Column(db.String(200))
-    normalized_text = db.Column(db.String(200))
-
+    qa_id = db.Column(db.Integer, db.ForeignKey('qas.id'), index=True)
+    text = db.Column(db.String(1024))
+    
     def __repr__(self):
         return '<Answer: {}>'.format(self.text)
 
-    
+
 class Message(db.Model):
     __tablename__ = 'messages'
 
     id = db.Column(db.Integer, primary_key=True)
-    text = db.Column(db.String(200))
-    is_bot_message = db.Column(db.Boolean)
-    date = db.Column(db.Date)
-
+    session_id = db.Column(db.String(36), index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), index=True, default=None)
+    chatbot_id = db.Column(db.Integer, db.ForeignKey('chatbots.id'), index=True, default=None)
+    text = db.Column(db.String(1024))
+    score = db.Column(db.Float, default=0)
+    created = db.Column(db.DateTime, default=datetime.utcnow)
+    
     def __repr__(self):
-        return '<Interaction: {}>'.format(self.text)
-
-
+        return '<Message: {}>'.format(self.text)
