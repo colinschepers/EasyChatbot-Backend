@@ -28,12 +28,15 @@ class Answer(Resource):
         args = self.parser.parse_args()
 
         if args.question:
-            message = Message(session_id=session['id'], user_id=current_user.id, text=args.question)
+            message = Message(session_id=session['id'], chatbot_id=current_user.chatbot_id, 
+                              user_id=current_user.id, text=args.question)
             db.session.add(message)
 
-        answer, score = Engine(current_user.chatbot_id).get_answer(args.question)
+        answer, score, is_welcome, is_no_answer = Engine(current_user.chatbot_id).get_answer(args.question)
 
-        message = Message(session_id=session['id'], chatbot_id=current_user.chatbot_id, text=answer, score=score)
+        message = Message(session_id=session['id'], chatbot_id=current_user.chatbot_id, 
+                          user_id=current_user.id, text=answer, score=score, 
+                          is_welcome=is_welcome, is_no_answer=is_no_answer)
         db.session.add(message)
         db.session.commit()
 
@@ -43,11 +46,11 @@ class Answer(Resource):
 @ns.route('/history')
 class History(Resource):
 
-    @api.marshal_with(message)
+    @api.marshal_with(message, as_list=True)
     @login_required
     def get(self):
         """Get the session history of messages from the user and chatbot"""
 
         messages = Message.query.filter_by(session_id=session['id'])
-        messages = [{'text': m.text, 'is_bot_message': bool(m.chatbot_id), 'date': m.created} for m in messages]
+        messages = [{'text': m.text, 'is_bot_message': bool(m.score), 'date': m.created} for m in messages]
         return messages, 200

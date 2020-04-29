@@ -46,12 +46,12 @@ class Engine:
 
     def get_answer(self, question):
         if not question:
-            answer = self.__get_welcome_message()
-            score = 1.0
-        else:
-            qa, score = self.get_qa(question)
-            answer = qa.answers[0].text if score >= self.match_threshold else self.__get_no_answer_message()
-        return replace_tags(answer), score
+            return replace_tags(self.__get_welcome_message()), 1.0, True, False
+        qa, score = self.get_qa(question)
+        answer = qa.answers[0].text
+        if score < self.match_threshold:
+            return replace_tags(self.__get_no_answer_message()), score, False, True
+        return replace_tags(answer), score, False, False
 
     def __get_welcome_message(self):
         if not self.welcome_messages:

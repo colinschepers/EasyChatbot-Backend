@@ -45,6 +45,7 @@ def create_app(config=None):
         from easychatbot.api.endpoints.chatbot import ns as chatbot_namespace
         from easychatbot.api.endpoints.qas import ns as qas_namespace
         from easychatbot.api.endpoints.engine import ns as engine_namespace
+        from easychatbot.api.endpoints.statistics import ns as statistics_namespace
 
         blueprint = Blueprint('api', __name__, url_prefix='/api')
         api.init_app(blueprint)
@@ -53,6 +54,7 @@ def create_app(config=None):
         api.add_namespace(chatbot_namespace)
         api.add_namespace(qas_namespace)
         api.add_namespace(engine_namespace)
+        api.add_namespace(statistics_namespace)
         app.register_blueprint(blueprint)
 
         from easychatbot import normalization

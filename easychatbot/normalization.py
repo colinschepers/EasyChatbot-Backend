@@ -14,8 +14,8 @@ from .core import LimitedSizeDict
 # nltk.download('stopwords')
 # nltk.download('wordnet')
 
-stopword = stopwords.words('english')
-wordnet_lemmatizer = WordNetLemmatizer()
+# stopword = stopwords.words('english')
+# wordnet_lemmatizer = WordNetLemmatizer()
 normalization_cache = LimitedSizeDict(size_limit=1000000)
 
 contractions = {
@@ -187,7 +187,7 @@ def expand_contractions(text, contractions):
 
 def init_normalization():
     normalization_cache = __load_normalization_cache()
-    __normalize('warmup')
+    #__normalize('warmup')
 
 
 def __load_normalization_cache():

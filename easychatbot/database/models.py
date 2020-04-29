@@ -38,7 +38,7 @@ class Chatbot(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(60), index=True)
-    match_threshold = db.Column(db.Float(), default=0.6)
+    match_threshold = db.Column(db.Float(), default=0.7)
     welcome_messages = db.Column(db.Text, default='[]')
     no_answer_messages = db.Column(db.Text, default='[]')
     
@@ -62,6 +62,7 @@ class Question(db.Model):
     __tablename__ = 'questions'
 
     id = db.Column(db.Integer, primary_key=True)
+    chatbot_id = db.Column(db.Integer, db.ForeignKey('chatbots.id'), index=True)
     qa_id = db.Column(db.Integer, db.ForeignKey('qas.id'), index=True)
     text = db.Column(db.String(1024))
     
@@ -73,6 +74,7 @@ class Answer(db.Model):
     __tablename__ = 'answer'
 
     id = db.Column(db.Integer, primary_key=True)
+    chatbot_id = db.Column(db.Integer, db.ForeignKey('chatbots.id'), index=True)
     qa_id = db.Column(db.Integer, db.ForeignKey('qas.id'), index=True)
     text = db.Column(db.String(1024))
     
@@ -88,7 +90,9 @@ class Message(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), index=True, default=None)
     chatbot_id = db.Column(db.Integer, db.ForeignKey('chatbots.id'), index=True, default=None)
     text = db.Column(db.String(1024))
-    score = db.Column(db.Float, default=0)
+    score = db.Column(db.Float, default=None)
+    is_welcome = db.Column(db.Boolean, default=False, index=True)
+    is_no_answer = db.Column(db.Boolean, default=False, index=True)
     created = db.Column(db.DateTime, default=datetime.utcnow)
     
     def __repr__(self):

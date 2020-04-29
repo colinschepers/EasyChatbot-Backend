@@ -1,4 +1,5 @@
 from datetime import datetime
+from collections import OrderedDict
 from flask_restplus import fields
 from easychatbot.api import api
 
@@ -60,7 +61,52 @@ qa = api.model('QA', {
 })
 
 message = api.model('Message', {
-    'text': fields.String(readOnly=True, example='Hello, how can I help you?'),
-    'is_bot_message': fields.Boolean(readOnly=True, example=True),
-    'date': fields.DateTime(readOnly=True, example=str(datetime.now()))
+    'text': fields.String(readOnly=True, example='Hello, how can I help you?',
+        description='The message'),
+    'is_bot_message': fields.Boolean(readOnly=True, example=True,
+        description='Whether the message was from the bot or the user'),
+    'date': fields.DateTime(readOnly=True, example=str(datetime.now()),
+        description='The timestamp the message was created')
+})
+
+qa_statistics = api.model('QA Statistics', {
+    'qa_count': fields.Integer(readOnly=True, example=345,
+        description='The total count of QAs'),
+    'question_count': fields.Integer(readOnly=True, example=897,
+        description='The total count of questions'),
+    'answer_count': fields.Integer(readOnly=True, example=451,
+        description='The total count of answers'),
+})
+
+chatbot_statistics = api.model('Chatbot Statistics', {
+    'user_count': fields.Integer(readOnly=True, example=5,
+        description='The number of unique users that interacted with the chatbot'),
+    'session_count': fields.Integer(readOnly=True, example=7,
+        description='The number of chatbot sessions'),
+    'total_msg_count': fields.Integer(readOnly=True, example=63,
+        description='The total number of messages'),
+    'bot_msg_count': fields.Integer(readOnly=True, example=30,
+        description='The number of messages from the bot, excluding welcome messages and no answer messages'),
+    'user_msg_count': fields.Integer(readOnly=True, example=21,
+        description='The number messages from the user'),
+    'accuracy': fields.Integer(readOnly=True, example=84.75,
+        description='The percentage of questions that were successfully answered'),
+    'match_score': fields.Integer(readOnly=True, example=77.2396367,
+        description='The average score of the matching, between 0 and 100.' +
+            'A higher score means a user question strongly matched a QA in the knowledge base, ' +
+            'while a lower scores could mean missing data or generalization.'),
+})
+
+chatbot_statistics_dict = api.model('Chatbot Statistics per day', {
+    '*': fields.Wildcard(fields.Nested(chatbot_statistics), 
+        example={
+            'user_count': 5,
+            'session_count': 7,
+            'total_msg_count': 63,
+            'bot_msg_count': 30,
+            'user_msg_count': 21,
+            'accuracy': 84.75,
+            'match_score': 77.2396367
+        },
+        description='The chatbot statistics for a specific day')
 })

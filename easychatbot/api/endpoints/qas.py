@@ -17,12 +17,12 @@ ns = api.namespace('qas', description='Operations regarding the QA object')
 class QACollection(Resource):
 
     @api.expect(pagination_parser)
-    @api.marshal_with(qa)
+    @api.marshal_with(qa, as_list=True)
     @api.response(401, 'You are not authorized or logged in.')
     @api.response(404, 'Chatbot not found.')
     @login_required
     def get(self):
-        """Get QAs"""
+        """Get a list of QAs"""
         
         args = pagination_parser.parse_args(request)
         page = args.get('page', 1)
@@ -52,6 +52,7 @@ class QACollection(Resource):
         db.session.add(qa)
         db.session.flush()
         qa = to_db_model(request.json, qa)
+        update_qa_statistics()
         db.session.commit()
 
         return to_view_model(qa), 200
@@ -88,6 +89,7 @@ class QAItem(Resource):
 
         qa = QA.query.filter_by(chatbot_id=current_user.chatbot_id, id=id).one()
         qa = to_db_model(request.json, qa)
+        update_qa_statistics()
         db.session.commit()
 
         return to_view_model(qa), 200
@@ -104,6 +106,7 @@ class QAItem(Resource):
         questions = Question.query.filter_by(qa_id=qa.id).delete()
         answers = Answer.query.filter_by(qa_id=qa.id).delete()
         db.session.delete(qa)
+        update_qa_statistics()
         db.session.commit()
 
         return None, 204
@@ -115,7 +118,7 @@ def to_db_model(data, qa):
         if existing_question and text:
             existing_question.text = text
         elif text:
-            db.session.add(Question(qa_id=qa.id, text=text))
+            db.session.add(Question(chatbot_id=current_user.chatbot_id, qa_id=qa.id, text=text))
         elif existing_question:
             db.session.delete(existing_question)
 
@@ -124,7 +127,7 @@ def to_db_model(data, qa):
         if existing_answer and text:
             existing_answer.text = text
         elif text:
-            db.session.add(Answer(qa_id=qa.id, text=text))
+            db.session.add(Answer(chatbot_id=current_user.chatbot_id, qa_id=qa.id, text=text))
         elif existing_answer:
             db.session.delete(existing_answer)
 
@@ -139,3 +142,11 @@ def to_view_model(qa):
     answers = Answer.query.with_entities(Answer.text).filter_by(qa_id=qa.id).all()
     data['answers'] = [a.text for a in answers]
     return data
+
+
+def update_qa_statistics():
+    stats = QAStatistics(chatbot_id=current_user.chatbot_id)
+    stats.qa_count = QA.query.filter_by(chatbot_id=current_user.chatbot_id).count()
+    stats.question_count = Question.query.filter_by(chatbot_id=current_user.chatbot_id).count()
+    stats.answer_count = Answer.query.filter_by(chatbot_id=current_user.chatbot_id).count()
+    db.session.add(stats)
