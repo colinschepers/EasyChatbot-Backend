@@ -52,7 +52,6 @@ class QACollection(Resource):
         db.session.add(qa)
         db.session.flush()
         qa = to_db_model(request.json, qa)
-        update_qa_statistics()
         db.session.commit()
 
         return to_view_model(qa), 200
@@ -89,7 +88,6 @@ class QAItem(Resource):
 
         qa = QA.query.filter_by(chatbot_id=current_user.chatbot_id, id=id).one()
         qa = to_db_model(request.json, qa)
-        update_qa_statistics()
         db.session.commit()
 
         return to_view_model(qa), 200
@@ -106,7 +104,6 @@ class QAItem(Resource):
         questions = Question.query.filter_by(qa_id=qa.id).delete()
         answers = Answer.query.filter_by(qa_id=qa.id).delete()
         db.session.delete(qa)
-        update_qa_statistics()
         db.session.commit()
 
         return None, 204
@@ -142,11 +139,3 @@ def to_view_model(qa):
     answers = Answer.query.with_entities(Answer.text).filter_by(qa_id=qa.id).all()
     data['answers'] = [a.text for a in answers]
     return data
-
-
-def update_qa_statistics():
-    stats = QAStatistics(chatbot_id=current_user.chatbot_id)
-    stats.qa_count = QA.query.filter_by(chatbot_id=current_user.chatbot_id).count()
-    stats.question_count = Question.query.filter_by(chatbot_id=current_user.chatbot_id).count()
-    stats.answer_count = Answer.query.filter_by(chatbot_id=current_user.chatbot_id).count()
-    db.session.add(stats)
