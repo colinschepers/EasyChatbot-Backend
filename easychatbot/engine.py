@@ -16,12 +16,12 @@ from easychatbot.tags import replace_tags
 
 class Engine:
     def __init__(self, chatbot_id):
-        g.chatbot = Chatbot.query.filter_by(id=chatbot_id).one()
+        g.chatbot = g.chatbot if 'chatbot' in g else Chatbot.query.filter_by(id=chatbot_id).one()
         self.name = g.chatbot.name
         self.match_threshold = g.chatbot.match_threshold
         self.welcome_messages = json.loads(g.chatbot.welcome_messages)
         self.no_answer_messages = json.loads(g.chatbot.no_answer_messages)
-        self.qas = QA.query.filter_by(chatbot_id=chatbot_id).join(Question).join(Answer).all()
+        self.qas = g.qas = g.qas if 'qas' in g else QA.query.filter_by(chatbot_id=chatbot_id).join(Question).join(Answer).all()
 
     def get_qa(self, query):
         if len(self.qas) == 0:

@@ -4,10 +4,11 @@ from flask_restplus import Resource, reqparse
 from flask_login import login_required, current_user
 from easychatbot.api import api
 from easychatbot.api.parsers import pagination_parser
-from easychatbot.api.serializers import qa
+from easychatbot.api.serializers import qa, suggestion
 from easychatbot.database import db
 from easychatbot.database.models import QA, Question, Answer
-from easychatbot.engine import Engine 
+from easychatbot.engine import Engine
+from easychatbot.suggestions import get_question_suggestions
 
 
 ns = api.namespace('qas', description='Operations regarding the QA object')
@@ -107,6 +108,31 @@ class QAItem(Resource):
         db.session.commit()
 
         return None, 204
+
+
+@ns.route('/suggestions')
+class Suggestions(Resource):
+
+    parser = reqparse.RequestParser()
+    parser.add_argument('questions', type=str, action='append', required=False, help='Already existing questions')
+    parser.add_argument('top', type=int, required=False, default=10, help='The number of results.')
+
+    @api.expect(parser)
+    @api.marshal_with(suggestion, as_list=True)
+    @api.response(401, 'You are not authorized or logged in.')
+    @api.response(404, 'Chatbot not found.')
+    @login_required
+    def get(self):
+        """Get a list of suggested questions"""
+        
+        args = self.parser.parse_args(request)
+        questions = args.get('questions', [])
+        top = args.get('top', 10)
+
+        suggestions = get_question_suggestions(current_user.chatbot_id, questions)
+        suggestions = [{'text': text, 'score': score} for text, score in suggestions[:top]]
+
+        return suggestions, 200
 
 
 def to_db_model(data, qa):

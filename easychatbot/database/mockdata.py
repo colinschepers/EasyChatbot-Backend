@@ -1,6 +1,7 @@
 from datetime import datetime
 from easychatbot.database import db
 from easychatbot.database.models import User, Chatbot, QA, Question, Answer, Message
+from easychatbot.normalization import normalize_single
 
 
 def create_mockdata():
@@ -67,6 +68,7 @@ def create_mockdata():
     ]
 
     for message in messages:
+        message.normalized_text = normalize_single(message.text)
         db.session.add(message)
 
     db.session.commit()

@@ -14,8 +14,8 @@ from .core import LimitedSizeDict
 # nltk.download('stopwords')
 # nltk.download('wordnet')
 
-# stopword = stopwords.words('english')
-# wordnet_lemmatizer = WordNetLemmatizer()
+stopword = stopwords.words('english')
+wordnet_lemmatizer = WordNetLemmatizer()
 normalization_cache = LimitedSizeDict(size_limit=1000000)
 
 contractions = {
@@ -166,7 +166,7 @@ def __normalize(text):
     tokens = nltk.word_tokenize(normalized_text)
     tokens = [wordnet_lemmatizer.lemmatize(token) for token in tokens if token not in stopword]
     tokens = [token for token in tokens if token not in stopword]
-    normalized_text = ''.join(token for token in tokens)
+    normalized_text = ' '.join(token for token in tokens)
     normalization_cache[text] = normalized_text
     return normalized_text
 

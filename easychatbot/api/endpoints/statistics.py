@@ -104,5 +104,5 @@ def get_chatbot_stats_output(df=None):
         'bot_msg_count': bot_msg_count,
         'user_msg_count': total_msg_count - bot_msg_count,
         'accuracy': 100.0 - (int(df['is_no_answer'].sum()) / bot_msg_count) * 100,
-        'match_score': df['score'].mean() * 100
+        'match_score': df['score'].mean()
     }

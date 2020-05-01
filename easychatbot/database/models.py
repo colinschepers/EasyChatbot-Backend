@@ -90,6 +90,7 @@ class Message(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), index=True, default=None)
     chatbot_id = db.Column(db.Integer, db.ForeignKey('chatbots.id'), index=True, default=None)
     text = db.Column(db.String(1024))
+    normalized_text = db.Column(db.String(1024), default=None)
     score = db.Column(db.Float, default=None)
     is_welcome = db.Column(db.Boolean, default=False, index=True)
     is_no_answer = db.Column(db.Boolean, default=False, index=True)
@@ -97,3 +98,17 @@ class Message(db.Model):
     
     def __repr__(self):
         return '<Message: {}>'.format(self.text)
+
+
+class Suggestion(db.Model):
+    __tablename__ = 'suggestions'
+
+    id = db.Column(db.Integer, primary_key=True)
+    chatbot_id = db.Column(db.Integer, db.ForeignKey('chatbots.id'), index=True, default=None)
+    text = db.Column(db.String(1024))
+    normalized_text = db.Column(db.String(1024), index=True)
+    count = db.Column(db.Integer)
+    score = db.Column(db.Float)
+    
+    def __repr__(self):
+        return '<Suggestion: {}>'.format(self.text)

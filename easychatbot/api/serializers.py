@@ -91,10 +91,11 @@ chatbot_statistics = api.model('Chatbot Statistics', {
         description='The number messages from the user'),
     'accuracy': fields.Integer(readOnly=True, example=84.75,
         description='The percentage of questions that were successfully answered'),
-    'match_score': fields.Integer(readOnly=True, example=77.2396367,
-        description='The average score of the matching, between 0 and 100.' +
+    'match_score': fields.Integer(readOnly=True, example=0.77239636,
+        description='The average score of the matching, between 0 and 1. ' +
             'A higher score means a user question strongly matched a QA in the knowledge base, ' +
-            'while a lower scores could mean missing data or generalization.'),
+            'while a lower scores could mean missing data or generalization. When a match score is ' +
+            'below the match_threshold of the chatbot, a no_answer is given by the chatbot.'),
 })
 
 chatbot_statistics_dict = api.model('Chatbot Statistics per day', {
@@ -106,7 +107,12 @@ chatbot_statistics_dict = api.model('Chatbot Statistics per day', {
             'bot_msg_count': 30,
             'user_msg_count': 21,
             'accuracy': 84.75,
-            'match_score': 77.2396367
+            'match_score': 0.77239636
         },
         description='The chatbot statistics for a specific day')
+})
+
+suggestion = api.model('Suggestion', {
+    'text': fields.String(readOnly=True, example='How much does TV Plus cost?', description='The text'),
+    'score': fields.Float(readOnly=True, example=0.393, description='The relevance score between 0 and 1.')
 })
